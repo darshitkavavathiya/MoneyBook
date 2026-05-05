@@ -4,7 +4,7 @@ import { format } from "date-fns";
 export default async function TransactionsPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  const { data: profiles } = await supabase.from("profiles").select("id").eq("is_default", true).single();
+  const { data: profiles } = await supabase.from("profiles").select("id").eq("is_default", true).limit(1).maybeSingle();
 
   const { data: transactions } = await supabase
     .from("transactions")

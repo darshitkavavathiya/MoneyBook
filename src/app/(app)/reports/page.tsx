@@ -14,7 +14,7 @@ const IncomeExpenseBarChart = dynamic(
 
 export default async function ReportsPage() {
   const supabase = await createClient();
-  const { data: profiles } = await supabase.from("profiles").select("id").eq("is_default", true).single();
+  const { data: profiles } = await supabase.from("profiles").select("id").eq("is_default", true).limit(1).maybeSingle();
   const profileId = profiles?.id;
 
   // 1. Fetch data for Category Pie Chart (Current Month Expenses)

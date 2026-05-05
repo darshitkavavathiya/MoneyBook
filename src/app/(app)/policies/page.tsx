@@ -7,7 +7,7 @@ import { ArrowLeft } from "lucide-react";
 
 export default async function PoliciesPage() {
   const supabase = await createClient();
-  const { data: profiles } = await supabase.from("profiles").select("id").eq("is_default", true).single();
+  const { data: profiles } = await supabase.from("profiles").select("id").eq("is_default", true).limit(1).maybeSingle();
 
   const { data: policies } = await supabase
     .from("policy_dashboard")

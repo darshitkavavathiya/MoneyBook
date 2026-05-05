@@ -14,7 +14,7 @@ export async function exportAllData() {
     .from("user_roles")
     .select("role")
     .eq("user_id", user.id)
-    .single();
+    .maybeSingle();
 
   if (roles?.role !== "admin") {
     throw new Error("Unauthorized: Admin only");
