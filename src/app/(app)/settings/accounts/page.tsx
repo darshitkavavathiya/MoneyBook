@@ -21,7 +21,7 @@ export default async function AccountsPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   const { data: accounts } = await supabase.from("accounts").select("*");
-  const { data: profiles } = await supabase.from("profiles").select("id").eq("is_default", true).single();
+  const { data: profiles } = await supabase.from("profiles").select("id").eq("is_default", true).limit(1).maybeSingle();
 
   const activeProfileId = profiles?.id;
 
@@ -73,10 +73,10 @@ export default async function AccountsPage() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="cash">Cash</SelectItem>
-                <SelectItem value="bank">Bank Account</SelectItem>
-                <SelectItem value="upi">UPI / Wallet</SelectItem>
-                <SelectItem value="credit_card">Credit Card</SelectItem>
+                <SelectItem value="Cash">Cash</SelectItem>
+                <SelectItem value="Bank">Bank Account</SelectItem>
+                <SelectItem value="UPI">UPI / Wallet</SelectItem>
+                <SelectItem value="Credit Card">Credit Card</SelectItem>
               </SelectContent>
             </Select>
           </div>

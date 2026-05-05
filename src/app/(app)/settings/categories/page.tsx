@@ -10,7 +10,7 @@ export default async function CategoriesPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   const { data: categories } = await supabase.from("categories").select("*").order('type');
-  const { data: profiles } = await supabase.from("profiles").select("id").eq("is_default", true).single();
+  const { data: profiles } = await supabase.from("profiles").select("id").eq("is_default", true).limit(1).maybeSingle();
 
   const activeProfileId = profiles?.id;
 
