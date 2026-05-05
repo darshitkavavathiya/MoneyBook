@@ -3,15 +3,17 @@ import { createClient } from "@/lib/supabase/server";
 export default async function DashboardPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  const { data: profiles } = await supabase.from("profiles").select("id").eq("is_default", true).single();
+  const { data: profileData } = await supabase.from("profiles").select("id").eq("is_default", true).limit(1).maybeSingle();
 
-  const profileId = profiles?.id;
+  const profileId = profileData?.id;
 
   // Fetch accounts total balance
-  const { data: accounts } = await supabase
-    .from("accounts")
-    .select("current_balance")
-    .eq("profile_id", profileId || "");
+  const { data: accounts } = profileId 
+    ? await supabase
+        .from("accounts")
+        .select("current_balance")
+        .eq("profile_id", profileId)
+    : { data: [] };
 
   const totalBalance = accounts?.reduce((sum, acc) => sum + Number(acc.current_balance), 0) || 0;
 

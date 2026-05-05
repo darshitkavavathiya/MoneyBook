@@ -29,12 +29,16 @@ interface FastEntryModalProps {
 export function FastEntryModal({ profiles, categories, accounts }: FastEntryModalProps) {
   const [open, setOpen] = React.useState(false);
   const [isPending, setIsPending] = React.useState(false);
-  const activeProfile = profiles[0]; // TODO: Use real active profile from Context
+  const activeProfile = profiles.length > 0 ? profiles[0] : null;
 
   const incomeCategories = categories.filter((c) => c.type === "income");
   const expenseCategories = categories.filter((c) => c.type === "expense");
 
   async function onSubmit(formData: FormData) {
+    if (!activeProfile) {
+      console.error("No active profile found");
+      return;
+    }
     setIsPending(true);
     formData.append("profile_id", activeProfile.id);
     try {

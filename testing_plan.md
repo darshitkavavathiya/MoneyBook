@@ -1,50 +1,49 @@
-# MoneyBook: Comprehensive Testing & Validation Plan
+# MoneyBook: Automation & Manual Testing Plan
 
-This plan is designed to audit the current state of the application (estimated at 20% completion) and identify gaps before moving to the final 80% of implementation.
+## Phase 1: Automation Strategy
 
-## 1. Authentication & Session Persistence
-**Issue**: User reports being asked to login with Google repeatedly.
-- [ ] **Test Case 1.1**: Login with Google and refresh the page. Check if the session persists.
-- [ ] **Test Case 1.2**: Inspect browser cookies for `sb-access-token` and `sb-refresh-token`.
-- [ ] **Test Case 1.3**: Validate `src/proxy.ts` and `src/lib/supabase/proxy.ts` to ensure `Set-Cookie` headers are correctly forwarded from Supabase.
-- [ ] **Test Case 1.4**: Test session expiration behavior.
+We will use a combination of **Browser Automation** (using my internal tools) and **Playwright** (for your local CI/CD) to test the following flows.
 
-## 2. Multi-Profile System
-- [ ] **Test Case 2.1**: Create multiple profiles (Personal, Business).
-- [ ] **Test Case 2.2**: Switch profiles via the `ProfileSwitcher`.
-- [ ] **Test Case 2.3**: Verify that switching a profile updates the global data (Transactions, Accounts, Dashboard) without needing a page refresh.
-- [ ] **Test Case 2.4**: Ensure `profile_id` is correctly saved in the session or a cookie to persist across navigation.
+### 1. Authentication Flow (Automated)
 
-## 3. Core Finance Modules (Accounts & Categories)
-- [ ] **Test Case 3.1**: Create accounts (Cash, Bank, UPI). Verify initial balance.
-- [ ] **Test Case 3.2**: Create custom categories. Verify they appear in transaction forms.
-- [ ] **Test Case 3.3**: Check if default categories are correctly seeded upon new profile creation.
+- [ ] **Scenario**: Visit landing page -> Click Get Started -> Verify Login page load.
+- [ ] **Scenario**: Post-OAuth Callback -> Verify redirect to `/dashboard`.
+- [ ] **Scenario**: Refresh page -> Verify session persistence (No logout loop).
 
-## 4. Transaction Flow
-- [ ] **Test Case 4.1**: Add an Income transaction. Verify Account balance increases.
-- [ ] **Test Case 4.2**: Add an Expense transaction. Verify Account balance decreases.
-- [ ] **Test Case 4.3**: Test the "Fast Entry Modal" (`+` button).
-- [ ] **Test Case 4.4**: **Audit**: Verify if the `attachments` upload logic is actually working or just a placeholder.
+### 2. Multi-Profile & Context (Automated)
 
-## 5. Advanced Modules (Shared, Borrow/Lend, Budgets)
-- [ ] **Test Case 5.1 (Shared)**: Create an expense and split it among 3 people. Check if "Settlements" and "Balances" update correctly.
-- [ ] **Test Case 5.2 (Borrow/Lend)**: Test the PIN protection.
-    - [ ] Set a PIN.
-    - [ ] Try to access the module without a PIN.
-    - [ ] Verify PIN hashing in the database (`user_roles`).
-- [ ] **Test Case 5.3 (Budgets)**: Set a category limit and add an expense that exceeds it. Check if the "Alert/Progress Bar" triggers.
+- [ ] **Scenario**: Open Profile Switcher -> Select a different profile -> Verify UI updates.
+- [ ] **Scenario**: Verify that data (Transactions/Accounts) is filtered by the selected `profile_id`.
 
-## 6. Reports & Analytics
-- [ ] **Test Case 6.1**: Verify "Total Income" and "Total Expense" calculations on the Dashboard.
-- [ ] **Test Case 6.2**: Check Recharts visualizations for category-wise breakdowns.
-- [ ] **Test Case 6.3**: Verify data accuracy between the table view and the chart view.
+### 3. Core CRUD Operations (Automated)
 
-## 7. Admin & Export
-- [ ] **Test Case 7.1**: Log in as an Admin. Verify access to the "Export" button.
-- [ ] **Test Case 7.2**: Trigger "Export to Excel" and verify the `.xlsx` file contains all user data.
-- [ ] **Test Case 7.3**: Attempt to access Admin features as a regular user (should fail).
+- [ ] **Accounts**: Create "Cash" account with ₹5000 -> Verify it appears in the list.
+- [ ] **Categories**: Create "Food" category -> Verify it appears in the dropdown.
+- [ ] **Transactions**: Add ₹1000 Income -> Verify Account balance becomes ₹6000.
+- [ ] **Transactions**: Add ₹500 Expense -> Verify Account balance becomes ₹5500.
 
-## 8. PWA & Mobile UX
-- [ ] **Test Case 8.1**: Open in mobile browser. Test Bottom Navigation responsiveness.
-- [ ] **Test Case 8.2**: Check "Add to Home Screen" prompt.
-- [ ] **Test Case 8.3**: Verify offline shell loading (can the app open without a network?).
+### 4. Advanced Module Logic (Deep Audit)
+
+- [ ] **Shared Expenses**:
+  - [ ] Create expense of ₹300.
+  - [ ] Split equally between 3 people.
+  - [ ] Verify each person owes ₹100 in the "Balances" view.
+- [ ] **Borrow/Lend (PIN)**:
+  - [ ] Try to access without PIN -> Verify "Locked" screen.
+  - [ ] Enter PIN -> Verify access granted.
+- [ ] **Budgets**:
+  - [ ] Set "Food" budget to ₹1000.
+  - [ ] Add ₹1200 Food expense -> Verify "Over Budget" alert/indicator appears.
+
+### 5. Admin & Reports (Automated)
+
+- [ ] **Charts**: Verify Recharts components are rendered and not crashing.
+- [ ] **Export**: Click "Export to Excel" (Admin only) -> Verify file generation.
+
+---
+
+## Phase 2: Implementation of Automation
+
+I will now begin running these tests using my browser subagent. I will start with the **Auth and Profile Switcher** flows since those are the heart of the app.
+
+**Ready to start?** I'll begin by visiting your Vercel URL and performing a baseline check.
