@@ -1,10 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
-import { addCategory } from "@/app/actions/finance";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tags, ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { AddCategoryForm } from "@/components/finance/add-category-form";
 
 export default async function CategoriesPage() {
   const supabase = await createClient();
@@ -52,32 +49,7 @@ export default async function CategoriesPage() {
         </div>
       </div>
 
-      <div className="pt-6 border-t">
-        <h2 className="text-lg font-semibold mb-4">Add Custom Category</h2>
-        <form action={addCategory} className="space-y-4">
-          <input type="hidden" name="profile_id" value={activeProfileId} />
-          
-          <div>
-            <label className="text-xs text-muted-foreground font-medium mb-1 block">Category Name</label>
-            <Input name="name" placeholder="e.g., Subscriptions" required />
-          </div>
-          
-          <div>
-            <label className="text-xs text-muted-foreground font-medium mb-1 block">Type</label>
-            <Select name="type" required defaultValue="expense">
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="expense">Expense</SelectItem>
-                <SelectItem value="income">Income</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <Button type="submit" className="w-full">Create Category</Button>
-        </form>
-      </div>
+      <AddCategoryForm profileId={activeProfileId || ""} />
     </div>
   );
 }

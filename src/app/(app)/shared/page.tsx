@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { format } from "date-fns";
-import { Button } from "@/components/ui/button";
-import { Plus, CheckCircle2 } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
+import { AddSharedExpenseForm } from "@/components/finance/add-shared-expense-form";
 
 export default async function SharedPage() {
   const supabase = await createClient();
@@ -23,9 +23,7 @@ export default async function SharedPage() {
     <div className="p-4 space-y-6 pb-20">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight">Shared Expenses</h1>
-        <Button size="sm" variant="outline" className="gap-1 rounded-full">
-          <Plus className="h-4 w-4" /> New
-        </Button>
+        <AddSharedExpenseForm payerProfileId={profiles?.id || ""} />
       </div>
       
       <div className="space-y-6">
