@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { format } from "date-fns";
-import { Button } from "@/components/ui/button";
-import { Plus, ArrowDownToLine, ArrowUpFromLine, Lock } from "lucide-react";
+import { ArrowDownToLine, ArrowUpFromLine, Lock } from "lucide-react";
+import { AddBorrowLendForm } from "@/components/finance/add-borrow-lend-form";
 
 export default async function BorrowLendPage({
   searchParams,
@@ -26,12 +26,12 @@ export default async function BorrowLendPage({
               <div key={i} className="w-12 h-12 rounded-xl border-2 flex items-center justify-center text-2xl font-bold bg-card shadow-sm">*</div>
             ))}
           </div>
-          <Button type="submit" variant="default" className="w-full mt-4" formAction={async () => {
+          <button type="submit" className="w-full mt-4 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors" formAction={async () => {
             "use server";
             import("next/navigation").then(m => m.redirect("/borrow-lend?unlocked=true"));
           }}>
             Unlock (Demo)
-          </Button>
+          </button>
         </form>
       </div>
     );
@@ -50,9 +50,7 @@ export default async function BorrowLendPage({
     <div className="p-4 space-y-6 pb-20">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight">Borrow & Lend</h1>
-        <Button size="sm" variant="outline" className="gap-1 rounded-full">
-          <Plus className="h-4 w-4" /> New
-        </Button>
+        <AddBorrowLendForm profileId={profiles?.id || ""} />
       </div>
 
       <div className="grid grid-cols-2 gap-4">

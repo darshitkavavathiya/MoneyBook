@@ -3,6 +3,7 @@ import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Target } from "lucide-react";
 import Link from "next/link";
+import { AddBudgetForm } from "@/components/finance/add-budget-form";
 
 export default async function BudgetsPage() {
   const supabase = await createClient();
@@ -14,6 +15,8 @@ export default async function BudgetsPage() {
     .select("*, category:categories(name)")
     .eq("profile_id", profiles?.id || "")
     .eq("month", currentMonth);
+
+  const { data: categories } = await supabase.from("categories").select("*");
 
   // In a real scenario, we'd also fetch the sum of transactions for these categories in the current month to show progress bars.
   // We'll skip complex grouping logic for the basic setup and just display the set budgets.
@@ -61,7 +64,7 @@ export default async function BudgetsPage() {
       </div>
 
       <div className="pt-4">
-        <Button className="w-full">Set New Budget</Button>
+        <AddBudgetForm profileId={profiles?.id || ""} categories={categories || []} />
       </div>
     </div>
   );

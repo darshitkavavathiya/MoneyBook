@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Plus } from "lucide-react";
+import { Plus, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -124,7 +124,14 @@ export function FastEntryModal({ profiles, categories, accounts }: FastEntryModa
               </div>
 
               <Button type="submit" className="w-full bg-destructive text-destructive-foreground hover:bg-destructive/90" disabled={isPending}>
-                {isPending ? "Saving..." : "Save Expense"}
+                {isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  "Save Expense"
+                )}
               </Button>
             </form>
           </TabsContent>
@@ -179,7 +186,14 @@ export function FastEntryModal({ profiles, categories, accounts }: FastEntryModa
               </div>
 
               <Button type="submit" className="w-full bg-green-600 hover:bg-green-700 text-white" disabled={isPending}>
-                {isPending ? "Saving..." : "Save Income"}
+                {isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  "Save Income"
+                )}
               </Button>
             </form>
           </TabsContent>
