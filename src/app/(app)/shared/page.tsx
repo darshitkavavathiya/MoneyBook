@@ -2,28 +2,29 @@ import { createClient } from "@/lib/supabase/server";
 import { format } from "date-fns";
 import { CheckCircle2 } from "lucide-react";
 import { AddSharedExpenseForm } from "@/components/finance/add-shared-expense-form";
+import { getActiveProfileId } from "@/app/actions/profile";
 
 export default async function SharedPage() {
   const supabase = await createClient();
-  const { data: profiles } = await supabase.from("profiles").select("id").eq("is_default", true).limit(1).maybeSingle();
+  const profileId = await getActiveProfileId();
 
   const { data: expenses } = await supabase
     .from("shared_expenses")
     .select("*")
-    .eq("payer_profile_id", profiles?.id || "")
+    .eq("payer_profile_id", profileId || "")
     .order("date", { ascending: false });
 
   const { data: settlements } = await supabase
     .from("settlements")
     .select("*")
-    .eq("from_profile_id", profiles?.id || "")
+    .eq("from_profile_id", profileId || "")
     .order("date", { ascending: false });
 
   return (
     <div className="p-4 space-y-6 pb-20">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight">Shared Expenses</h1>
-        <AddSharedExpenseForm payerProfileId={profiles?.id || ""} />
+        <AddSharedExpenseForm payerProfileId={profileId || ""} />
       </div>
       
       <div className="space-y-6">

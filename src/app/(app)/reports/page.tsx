@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import dynamic from "next/dynamic";
 import { format, subMonths, startOfMonth, endOfMonth, parseISO } from "date-fns";
+import { getActiveProfileId } from "@/app/actions/profile";
 
 const ExpensePieChart = dynamic(
   () => import("@/components/charts/expense-pie-chart").then(mod => mod.ExpensePieChart),
@@ -14,8 +15,7 @@ const IncomeExpenseBarChart = dynamic(
 
 export default async function ReportsPage() {
   const supabase = await createClient();
-  const { data: profiles } = await supabase.from("profiles").select("id").eq("is_default", true).limit(1).maybeSingle();
-  const profileId = profiles?.id;
+  const profileId = await getActiveProfileId();
 
   // 1. Fetch data for Category Pie Chart (Current Month Expenses)
   const currentMonthStart = startOfMonth(new Date()).toISOString();

@@ -16,12 +16,11 @@
 - Implemented Fast Entry Modal Button (`+`) with loading spinners.
 
 ### 2.3.1 Fix: Account Balance Sync Integration
-**Status:** 🔴 Pending
-**Objective:** Creating a transaction currently inserts the record but does not dynamically update the related bank account's balance.
-**Implementation Steps:**
-1. **Refactor `addTransaction` Action:** Locate `src/app/actions/finance.ts`.
-2. **Fetch Current Balance:** Before inserting the transaction, query the `accounts` table for the `current_balance` of the selected `account_id`.
-3. **Calculate New Balance:**
-   - If `type === 'income'`, calculate `newBalance = currentBalance + amount`.
-   - If `type === 'expense'`, calculate `newBalance = currentBalance - amount`.
-4. **Execute Update:** Run an `UPDATE` on the `accounts` table setting `current_balance = newBalance`. Ensure both the insert and update complete together.
+**Status:** ✅ Completed
+**What was done:**
+- Refactored `addTransaction` in `src/app/actions/finance.ts`.
+- After inserting a transaction, the action now:
+  1. Fetches the current `current_balance` of the selected account.
+  2. Calculates the new balance (`+` for income, `-` for expense).
+  3. Updates the `accounts` table with the new balance.
+- Added `revalidatePath` calls for `/settings/accounts` and `/settings/budgets` to ensure the UI reflects changes immediately.

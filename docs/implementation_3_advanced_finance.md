@@ -6,12 +6,13 @@
 - Fetches constraints and monthly limits.
 
 ### 3.1.1 Fix: Dynamic Budget Tracking & Alerts
-**Status:** 🔴 Pending
-**Objective:** Replace the static "0% progress" bar on the Budgets page with live spending calculations mapped to category limits.
-**Implementation Steps:**
-1. **Fetch Month's Transactions:** On the Budgets page (`src/app/(app)/settings/budgets/page.tsx`), query the `transactions` table for all expenses that occurred within the current calendar month for the budgeted `category_id`.
-2. **Calculate Spending Metrics:** Sum the total amount of those fetched transactions to find `totalSpent`. Calculate the usage percentage using `(totalSpent / limit_amount) * 100`.
-3. **Dynamic UI Rendering:** Update the progress bar to use the calculated percentage. If `percentage >= 100`, change the progress bar color to red (`bg-destructive`) to alert the user.
+**Status:** ✅ Completed
+**What was done:**
+- Rewrote `src/app/(app)/settings/budgets/page.tsx` to fetch all expense transactions for the current month.
+- Built a `spentMap` (Map of `category_id` → `totalSpent`) from actual transaction data.
+- For each budget, dynamically calculates `percentage = (spent / limit) * 100`.
+- Progress bar width is now live. When spending exceeds the limit, the bar turns red (`bg-destructive`) and an `AlertTriangle` icon appears.
+- The label now shows exact `₹spent / ₹limit` instead of a static "Limit: ₹X".
 
 ## 3.2 Shared Expenses Module
 **Status:** ✅ Completed

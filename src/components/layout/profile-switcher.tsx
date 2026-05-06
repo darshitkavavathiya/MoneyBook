@@ -11,26 +11,28 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Database } from "@/lib/supabase/database.types";
+import { setActiveProfile } from "@/app/actions/profile";
+import { useRouter } from "next/navigation";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
 interface ProfileSwitcherProps {
   profiles: Profile[];
+  activeProfileId: string | null;
 }
 
-export function ProfileSwitcher({ profiles }: ProfileSwitcherProps) {
-  // If profiles is empty, fallback to a placeholder
+export function ProfileSwitcher({ profiles, activeProfileId }: ProfileSwitcherProps) {
+  const router = useRouter();
   const fallbackProfile = { id: "0", name: "No Profile", is_default: false };
-  const [activeProfile, setActiveProfile] = React.useState<Profile | typeof fallbackProfile>(
-    profiles.length > 0 ? profiles.find((p) => p.is_default) || profiles[0] : fallbackProfile
-  );
+  const currentProfile = profiles.find((p) => p.id === activeProfileId)
+    || profiles.find((p) => p.is_default)
+    || profiles[0]
+    || fallbackProfile;
 
-  // Sync state if profiles prop changes
-  React.useEffect(() => {
-    if (profiles.length > 0 && activeProfile.id === "0") {
-      setActiveProfile(profiles.find((p) => p.is_default) || profiles[0]);
-    }
-  }, [profiles, activeProfile.id]);
+  async function handleSwitch(profileId: string) {
+    await setActiveProfile(profileId);
+    router.refresh();
+  }
 
   return (
     <DropdownMenu>
@@ -44,7 +46,7 @@ export function ProfileSwitcher({ profiles }: ProfileSwitcherProps) {
         <div className="flex items-center gap-2 truncate">
           <UserCircle2 className="h-4 w-4 text-primary" />
           <span className="truncate text-sm font-medium">
-            {activeProfile.name}
+            {currentProfile.name}
           </span>
         </div>
         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -58,11 +60,11 @@ export function ProfileSwitcher({ profiles }: ProfileSwitcherProps) {
           profiles.map((profile) => (
             <DropdownMenuItem
               key={profile.id}
-              onClick={() => setActiveProfile(profile)}
+              onClick={() => handleSwitch(profile.id)}
               className="flex items-center justify-between"
             >
               <span className="truncate">{profile.name}</span>
-              {activeProfile.id === profile.id && (
+              {currentProfile.id === profile.id && (
                 <Check className="h-4 w-4 text-primary" />
               )}
             </DropdownMenuItem>

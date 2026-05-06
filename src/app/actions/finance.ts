@@ -19,12 +19,8 @@ export async function addTransaction(formData: FormData) {
   const date = formData.get("date") as string;
   const note = formData.get("note") as string;
 
-  // We multiply expense amount by -1 to keep amounts negative for expenses in the view, 
-  // though the schema just takes the positive amount and we determine by category type, wait, the schema doesn't have a 'type' column, it relies on category type!
-  // Wait, I need to check the schema for `transactions` table.
-  
-  // Let me just insert it directly
-  const { error } = await supabase
+  // 1. Insert the transaction record
+  const { error: txError } = await supabase
     .from("transactions")
     .insert({
       profile_id: profileId,
@@ -36,13 +32,34 @@ export async function addTransaction(formData: FormData) {
       note: note,
     });
 
-  if (error) {
-    console.error("Error adding transaction:", error);
+  if (txError) {
+    console.error("Error adding transaction:", txError);
     throw new Error("Failed to add transaction");
+  }
+
+  // 2. Update the account's current_balance
+  const { data: account } = await supabase
+    .from("accounts")
+    .select("current_balance")
+    .eq("id", accountId)
+    .single();
+
+  if (account) {
+    const currentBalance = Number(account.current_balance);
+    const newBalance = type === "income"
+      ? currentBalance + amount
+      : currentBalance - amount;
+
+    await supabase
+      .from("accounts")
+      .update({ current_balance: newBalance })
+      .eq("id", accountId);
   }
 
   revalidatePath("/dashboard");
   revalidatePath("/transactions");
+  revalidatePath("/settings/accounts");
+  revalidatePath("/settings/budgets");
 }
 
 export async function addAccount(formData: FormData) {

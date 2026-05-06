@@ -4,15 +4,16 @@ import { Button } from "@/components/ui/button";
 import { Plus, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { getActiveProfileId } from "@/app/actions/profile";
 
 export default async function PoliciesPage() {
   const supabase = await createClient();
-  const { data: profiles } = await supabase.from("profiles").select("id").eq("is_default", true).limit(1).maybeSingle();
+  const profileId = await getActiveProfileId();
 
   const { data: policies } = await supabase
     .from("policy_dashboard")
     .select("*")
-    .eq("profile_id", profiles?.id || "")
+    .eq("profile_id", profileId || "")
     .order("date", { ascending: false });
 
   return (

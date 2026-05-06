@@ -11,13 +11,14 @@ type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
 interface TopBarProps {
   profiles: Profile[];
+  activeProfileId: string | null;
 }
 
-export function TopBar({ profiles }: TopBarProps) {
+export function TopBar({ profiles, activeProfileId }: TopBarProps) {
   return (
     <header className="sticky top-0 z-40 flex h-14 w-full items-center justify-between border-b bg-background/80 px-4 backdrop-blur-md">
       <div className="flex items-center gap-4">
-        <ProfileSwitcher profiles={profiles} />
+        <ProfileSwitcher profiles={profiles} activeProfileId={activeProfileId} />
       </div>
       
       <div className="flex items-center gap-2">
