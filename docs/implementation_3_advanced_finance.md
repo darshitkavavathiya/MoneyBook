@@ -20,12 +20,18 @@
 - Structured settlement display logic.
 
 ### 3.2.1 Fix: Shared Expense Splitting Algorithm
-**Status:** 🔴 Pending
-**Objective:** Enhance the basic "Shared Expense" creation form to actually split costs among multiple participants and calculate individual debts.
-**Implementation Steps:**
-1. **Update Form & Schema:** Enhance the `AddSharedExpenseForm` to include a multi-select input where the user can pick participating profiles.
-2. **Refactor Backend Logic:** Update `addSharedExpense` in `src/app/actions/advanced.ts`. When a user submits a shared expense, divide the `amount` by the total number of selected participants.
-3. **Generate Debts:** For every participant that is *not* the payer, record that they owe the payer their split portion (update `settlements` tracking).
+**Status:** ✅ Completed
+**What was done:**
+- Rewrote `AddSharedExpenseForm` to include multi-select profile toggles (chip buttons) where the user picks who to split with.
+- Selected participant IDs are serialized as JSON in the form data.
+- Updated `addSharedExpense` in `src/app/actions/advanced.ts`:
+  - Parses participant IDs from the form.
+  - Calculates equal split: `amount / (payer + selected participants)`.
+  - Inserts records into the `shared_participants` table for each person's share.
+- Rewrote the Shared Expenses page (`src/app/(app)/shared/page.tsx`):
+  - Fetches participants alongside expenses using a Supabase join.
+  - Displays per-person split amounts as colored chips under each expense.
+  - Added a green "Others Owe You" summary card aggregating what other profiles owe the current user.
 
 ## 3.3 Borrow & Lend Module
 **Status:** ✅ Completed
@@ -33,12 +39,27 @@
 - Implemented visual indicators for "To Pay" vs "To Collect".
 
 ### 3.3.1 Fix: Borrow/Lend PIN Protection
-**Status:** 🔴 Pending
-**Objective:** Replace the mock "Unlock (Demo)" lock screen with an actual PIN verification system.
-**Implementation Steps:**
-1. **PIN Configuration UI:** Add a configuration section within the `Settings` page where a user can define or reset their 4-digit PIN for the active profile.
-2. **Verification Logic:** In the Borrow/Lend lock screen (`src/app/(app)/borrow-lend/page.tsx`), update the form action to accept a 4-digit input. Compare it securely against the profile's stored PIN.
-3. **Secure Session:** If successful, set a temporary secure cookie (e.g., `borrow_lend_unlocked=true`) that expires after a short session window.
+**Status:** ✅ Completed
+**What was done:**
+- Created `src/app/actions/pin.ts` with four server actions:
+  - `setPin()` — stores the 4-digit PIN in `user_roles.pin_hash`.
+  - `verifyPin()` — validates the PIN and sets a 15-minute `borrow_lend_unlocked` cookie.
+  - `isBorrowLendUnlocked()` — checks the cookie status.
+  - `hasPinConfigured()` — checks if the user has a PIN set.
+- Created `src/components/finance/pin-lock-screen.tsx`:
+  - Real 4-digit input with auto-focus advancement and backspace navigation.
+  - Error messages for incorrect PIN attempts.
+  - Loading state during verification.
+- Created `src/components/finance/set-pin-form.tsx`:
+  - Inline PIN configuration component for the Settings page.
+  - Shows "Set PIN" for new users and "Update" for users with existing PINs.
+  - Success confirmation feedback.
+- Rewrote `src/app/(app)/borrow-lend/page.tsx`:
+  - Removed the mock "Unlock (Demo)" button entirely.
+  - If user has PIN → shows real PinLockScreen until correct PIN is entered.
+  - If user has no PIN → shows a "Setup Required" prompt linking to Settings.
+  - After successful unlock, the cookie keeps the user authenticated for 15 minutes.
+- Added the `SetPinForm` to Settings page under a new "Security" section.
 
 ## 3.4 Policy Dashboard
 **Status:** ✅ Completed

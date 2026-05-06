@@ -1,39 +1,38 @@
 import { createClient } from "@/lib/supabase/server";
 import { format } from "date-fns";
-import { ArrowDownToLine, ArrowUpFromLine, Lock } from "lucide-react";
+import { ArrowDownToLine, ArrowUpFromLine } from "lucide-react";
 import { AddBorrowLendForm } from "@/components/finance/add-borrow-lend-form";
 import { getActiveProfileId } from "@/app/actions/profile";
+import { isBorrowLendUnlocked, hasPinConfigured } from "@/app/actions/pin";
+import { PinLockScreen } from "@/components/finance/pin-lock-screen";
+import Link from "next/link";
 
-export default async function BorrowLendPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ unlocked?: string }>;
-}) {
-  const isUnlocked = (await searchParams).unlocked === "true";
+export default async function BorrowLendPage() {
+  const hasPin = await hasPinConfigured();
+  const isUnlocked = await isBorrowLendUnlocked();
 
-  if (!isUnlocked) {
+  // If the user has configured a PIN and hasn't unlocked yet, show the lock screen
+  if (hasPin && !isUnlocked) {
+    return <PinLockScreen />;
+  }
+
+  // If the user has NOT configured a PIN, show a prompt to set one
+  if (!hasPin) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] p-4 space-y-6">
-        <div className="p-6 bg-primary/10 rounded-full">
-          <Lock className="h-12 w-12 text-primary" />
+      <div className="flex flex-col items-center justify-center min-h-[60vh] p-4 space-y-4 text-center">
+        <div className="p-6 bg-amber-500/10 rounded-full">
+          <ArrowDownToLine className="h-12 w-12 text-amber-500" />
         </div>
-        <h1 className="text-2xl font-bold tracking-tight text-center">PIN Protected Area</h1>
-        <p className="text-center text-muted-foreground text-sm max-w-[250px]">
-          Enter your 4-digit PIN to access your Borrow & Lend records.
+        <h1 className="text-2xl font-bold tracking-tight">Setup Required</h1>
+        <p className="text-muted-foreground text-sm max-w-[280px]">
+          You need to set a 4-digit PIN before accessing Borrow & Lend records. This keeps your private financial data secure.
         </p>
-        <form className="flex flex-col items-center gap-4 w-full max-w-xs">
-          <div className="flex gap-2 justify-center w-full">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="w-12 h-12 rounded-xl border-2 flex items-center justify-center text-2xl font-bold bg-card shadow-sm">*</div>
-            ))}
-          </div>
-          <button type="submit" className="w-full mt-4 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors" formAction={async () => {
-            "use server";
-            import("next/navigation").then(m => m.redirect("/borrow-lend?unlocked=true"));
-          }}>
-            Unlock (Demo)
-          </button>
-        </form>
+        <Link
+          href="/settings"
+          className="mt-4 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-6 py-2 inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors"
+        >
+          Go to Settings → Set PIN
+        </Link>
       </div>
     );
   }

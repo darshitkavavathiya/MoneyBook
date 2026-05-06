@@ -5,19 +5,21 @@ import { LogOut, ShieldAlert, User as UserIcon } from "lucide-react";
 import Link from "next/link";
 
 import { ExportButton } from "@/components/admin/export-button";
+import { SetPinForm } from "@/components/finance/set-pin-form";
 
 export default async function SettingsPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  // Check if admin
+  // Check if admin and get PIN status
   const { data: roles } = await supabase
     .from("user_roles")
-    .select("role")
+    .select("role, pin_hash")
     .eq("user_id", user?.id || "")
     .maybeSingle();
 
   const isAdmin = roles?.role === "admin";
+  const hasPin = !!roles?.pin_hash;
 
   return (
     <div className="p-4 space-y-6">
@@ -83,6 +85,14 @@ export default async function SettingsPage() {
             <span className="text-muted-foreground font-medium">INR (₹)</span>
           </div>
         </div>
+      </div>
+
+      {/* Security */}
+      <div className="space-y-4">
+        <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wider">
+          Security
+        </h3>
+        <SetPinForm hasExistingPin={hasPin} />
       </div>
 
       {/* Account Actions */}
