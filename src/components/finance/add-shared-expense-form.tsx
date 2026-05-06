@@ -12,21 +12,40 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Loader2, Plus } from "lucide-react";
+import { Loader2, Plus, Users } from "lucide-react";
+import { Database } from "@/lib/supabase/database.types";
+
+type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
 interface AddSharedExpenseFormProps {
   payerProfileId: string;
+  profiles: Profile[];
 }
 
-export function AddSharedExpenseForm({ payerProfileId }: AddSharedExpenseFormProps) {
+export function AddSharedExpenseForm({ payerProfileId, profiles }: AddSharedExpenseFormProps) {
   const [open, setOpen] = React.useState(false);
   const [isPending, setIsPending] = React.useState(false);
+  const [selectedParticipants, setSelectedParticipants] = React.useState<string[]>([]);
+
+  // Other profiles (not the current payer)
+  const otherProfiles = profiles.filter(p => p.id !== payerProfileId);
+
+  function toggleParticipant(profileId: string) {
+    setSelectedParticipants(prev =>
+      prev.includes(profileId)
+        ? prev.filter(id => id !== profileId)
+        : [...prev, profileId]
+    );
+  }
 
   async function onSubmit(formData: FormData) {
     setIsPending(true);
     try {
+      // Append selected participant IDs as a JSON string
+      formData.set("participant_ids", JSON.stringify(selectedParticipants));
       await addSharedExpense(formData);
       setOpen(false);
+      setSelectedParticipants([]);
     } catch (error) {
       console.error(error);
     } finally {
@@ -55,6 +74,37 @@ export function AddSharedExpenseForm({ payerProfileId }: AddSharedExpenseFormPro
           <div>
             <label className="text-xs text-muted-foreground font-medium mb-1 block">Amount (₹)</label>
             <Input type="number" step="0.01" name="amount" placeholder="500.00" required />
+          </div>
+
+          {/* Participant Selection */}
+          <div>
+            <label className="text-xs text-muted-foreground font-medium mb-2 block">
+              <Users className="h-3 w-3 inline mr-1" />
+              Split with ({selectedParticipants.length} selected)
+            </label>
+            {otherProfiles.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {otherProfiles.map(profile => {
+                  const isSelected = selectedParticipants.includes(profile.id);
+                  return (
+                    <button
+                      key={profile.id}
+                      type="button"
+                      onClick={() => toggleParticipant(profile.id)}
+                      className={`px-3 py-1.5 text-sm rounded-full border transition-colors ${
+                        isSelected
+                          ? 'bg-primary text-primary-foreground border-primary'
+                          : 'bg-card border-border hover:bg-accent'
+                      }`}
+                    >
+                      {profile.name}
+                    </button>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground">No other profiles available. Create additional profiles to split expenses.</p>
+            )}
           </div>
           
           <div>

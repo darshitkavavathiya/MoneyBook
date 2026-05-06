@@ -14,6 +14,15 @@ export async function addSharedExpense(formData: FormData) {
   const amount = parseFloat(formData.get("amount") as string);
   const splitType = formData.get("split_type") as string || "equal";
   const date = formData.get("date") as string || new Date().toISOString();
+  const participantIdsRaw = formData.get("participant_ids") as string;
+
+  // Parse participant IDs (other profiles to split with)
+  let participantIds: string[] = [];
+  try {
+    participantIds = JSON.parse(participantIdsRaw || "[]");
+  } catch {
+    participantIds = [];
+  }
 
   // Insert shared expense
   const { data: expense, error } = await supabase
@@ -30,9 +39,25 @@ export async function addSharedExpense(formData: FormData) {
 
   if (error || !expense) throw new Error("Failed to add shared expense");
 
-  // In a real app, we'd parse participant IDs and amounts.
-  // For simplicity here, we assume it's just recorded as an expense 
-  // and participants can be added later or via a more complex form.
+  // Calculate splits and insert participants
+  // Total participants = payer + selected participants
+  const allParticipantIds = [payerProfileId, ...participantIds];
+  const splitAmount = amount / allParticipantIds.length;
+
+  // Insert participant records (including the payer's share)
+  const participantRecords = allParticipantIds.map(profileId => ({
+    shared_expense_id: expense.id,
+    profile_id: profileId,
+    amount: splitAmount,
+  }));
+
+  const { error: participantError } = await supabase
+    .from("shared_participants")
+    .insert(participantRecords);
+
+  if (participantError) {
+    console.error("Error adding participants:", participantError);
+  }
 
   revalidatePath("/shared");
 }
