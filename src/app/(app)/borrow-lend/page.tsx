@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { format } from "date-fns";
 import { ArrowDownToLine, ArrowUpFromLine, Lock } from "lucide-react";
 import { AddBorrowLendForm } from "@/components/finance/add-borrow-lend-form";
+import { getActiveProfileId } from "@/app/actions/profile";
 
 export default async function BorrowLendPage({
   searchParams,
@@ -38,19 +39,19 @@ export default async function BorrowLendPage({
   }
 
   const supabase = await createClient();
-  const { data: profiles } = await supabase.from("profiles").select("id").eq("is_default", true).limit(1).maybeSingle();
+  const profileId = await getActiveProfileId();
 
   const { data: records } = await supabase
     .from("borrow_lend")
     .select("*")
-    .eq("profile_id", profiles?.id || "")
+    .eq("profile_id", profileId || "")
     .order("date", { ascending: false });
 
   return (
     <div className="p-4 space-y-6 pb-20">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight">Borrow & Lend</h1>
-        <AddBorrowLendForm profileId={profiles?.id || ""} />
+        <AddBorrowLendForm profileId={profileId || ""} />
       </div>
 
       <div className="grid grid-cols-2 gap-4">

@@ -25,10 +25,12 @@
 - Created Profile Switcher UI.
 
 ### 1.4.1 Fix: Global Profile Context Switching
-**Status:** 🔴 Pending
-**Objective:** The app currently relies heavily on querying `.eq("is_default", true)`. We need proper switching between "Personal" and "Business" profiles.
-**Implementation Steps:**
-1. **State Management Setup:** Use `next/headers` to manage an HTTP-only cookie called `activeProfileId`.
-2. **Create Action:** Create a new server action `setActiveProfile(profileId: string)` that writes the selected Profile ID to the cookie.
-3. **Update Profile Switcher Component:** In `src/components/layout/profile-switcher.tsx`, trigger `setActiveProfile` when the user clicks a different profile from the dropdown, then refresh the route.
-4. **Refactor Page Queries:** Update the data fetching logic across the application (Dashboard, Transactions, Settings) to read the `activeProfileId` cookie instead of hardcoding the default profile.
+**Status:** ✅ Completed
+**What was done:**
+- Created `src/app/actions/profile.ts` with two server actions:
+  - `setActiveProfile(profileId)` — stores selected profile in an HTTP-only cookie.
+  - `getActiveProfileId()` — reads the cookie, falls back to the database default profile.
+- Updated `ProfileSwitcher` component to call `setActiveProfile` on profile selection and refresh the route via `router.refresh()`.
+- Refactored **all 9 pages** that previously used `.eq("is_default", true)` to use `getActiveProfileId()` instead:
+  - Dashboard, Transactions, Reports, Shared, Budgets, Categories, Accounts, Policies, Borrow/Lend.
+- Updated `AppLayout` to pass `activeProfileId` to `TopBar` → `ProfileSwitcher`, and scoped categories/accounts in the FastEntryModal to the active profile.

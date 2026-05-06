@@ -1,25 +1,42 @@
 import { createClient } from "@/lib/supabase/server";
-import { format } from "date-fns";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft, Target } from "lucide-react";
+import { format, startOfMonth, endOfMonth } from "date-fns";
+import { ArrowLeft, Target, AlertTriangle } from "lucide-react";
 import Link from "next/link";
 import { AddBudgetForm } from "@/components/finance/add-budget-form";
+import { getActiveProfileId } from "@/app/actions/profile";
 
 export default async function BudgetsPage() {
   const supabase = await createClient();
-  const { data: profiles } = await supabase.from("profiles").select("id").eq("is_default", true).limit(1).maybeSingle();
+  const profileId = await getActiveProfileId();
   const currentMonth = format(new Date(), "yyyy-MM");
 
   const { data: budgets } = await supabase
     .from("budgets")
     .select("*, category:categories(name)")
-    .eq("profile_id", profiles?.id || "")
+    .eq("profile_id", profileId || "")
     .eq("month", currentMonth);
 
   const { data: categories } = await supabase.from("categories").select("*");
 
-  // In a real scenario, we'd also fetch the sum of transactions for these categories in the current month to show progress bars.
-  // We'll skip complex grouping logic for the basic setup and just display the set budgets.
+  // Fetch this month's expense transactions to calculate spending per category
+  const monthStart = startOfMonth(new Date()).toISOString();
+  const monthEnd = endOfMonth(new Date()).toISOString();
+
+  const { data: monthlyTransactions } = await supabase
+    .from("transactions")
+    .select("amount, category_id")
+    .eq("profile_id", profileId || "")
+    .eq("type", "expense")
+    .gte("date", monthStart)
+    .lte("date", monthEnd);
+
+  // Build a map of category_id -> total spent this month
+  const spentMap = new Map<string, number>();
+  monthlyTransactions?.forEach(tx => {
+    if (!tx.category_id) return;
+    const existing = spentMap.get(tx.category_id) || 0;
+    spentMap.set(tx.category_id, existing + Number(tx.amount));
+  });
 
   return (
     <div className="p-4 space-y-6 pb-20">
@@ -37,22 +54,32 @@ export default async function BudgetsPage() {
         {budgets?.map((b) => {
           // @ts-ignore
           const catName = b.category?.name || "Unknown";
+          const limit = Number(b.limit_amount);
+          const spent = spentMap.get(b.category_id) || 0;
+          const percentage = limit > 0 ? Math.round((spent / limit) * 100) : 0;
+          const isOverBudget = percentage >= 100;
+
           return (
             <div key={b.id} className="p-4 rounded-xl border bg-card shadow-sm space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Target className="h-4 w-4 text-primary" />
+                  <Target className={`h-4 w-4 ${isOverBudget ? 'text-destructive' : 'text-primary'}`} />
                   <span className="font-semibold">{catName}</span>
+                  {isOverBudget && <AlertTriangle className="h-4 w-4 text-destructive" />}
                 </div>
                 <span className="text-sm font-bold text-muted-foreground">
-                  Limit: ₹{Number(b.limit_amount).toFixed(2)}
+                  ₹{spent.toFixed(2)} / ₹{limit.toFixed(2)}
                 </span>
               </div>
-              {/* Fake progress bar since we aren't calculating live progress here yet */}
               <div className="h-2 w-full bg-secondary rounded-full overflow-hidden">
-                <div className="h-full bg-primary" style={{ width: '0%' }} />
+                <div
+                  className={`h-full transition-all ${isOverBudget ? 'bg-destructive' : 'bg-primary'}`}
+                  style={{ width: `${Math.min(percentage, 100)}%` }}
+                />
               </div>
-              <p className="text-xs text-muted-foreground text-right">0% used</p>
+              <p className={`text-xs text-right ${isOverBudget ? 'text-destructive font-semibold' : 'text-muted-foreground'}`}>
+                {percentage}% used
+              </p>
             </div>
           );
         })}
@@ -64,7 +91,7 @@ export default async function BudgetsPage() {
       </div>
 
       <div className="pt-4">
-        <AddBudgetForm profileId={profiles?.id || ""} categories={categories || []} />
+        <AddBudgetForm profileId={profileId || ""} categories={categories || []} />
       </div>
     </div>
   );

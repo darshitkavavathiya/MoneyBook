@@ -1,10 +1,11 @@
 import { createClient } from "@/lib/supabase/server";
 import { format } from "date-fns";
+import { getActiveProfileId } from "@/app/actions/profile";
 
 export default async function TransactionsPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  const { data: profiles } = await supabase.from("profiles").select("id").eq("is_default", true).limit(1).maybeSingle();
+  const profileId = await getActiveProfileId();
 
   const { data: transactions } = await supabase
     .from("transactions")
@@ -12,7 +13,7 @@ export default async function TransactionsPage() {
       *,
       category:categories(name, type)
     `)
-    .eq("profile_id", profiles?.id || "")
+    .eq("profile_id", profileId || "")
     .order("date", { ascending: false })
     .order("created_at", { ascending: false });
 

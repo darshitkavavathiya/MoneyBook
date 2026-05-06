@@ -3,6 +3,7 @@ import { Building2, Wallet, CreditCard, Smartphone } from "lucide-react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { AddAccountForm } from "@/components/finance/add-account-form";
+import { getActiveProfileId } from "@/app/actions/profile";
 
 const getIconForType = (type: string) => {
   switch (type) {
@@ -17,7 +18,7 @@ const getIconForType = (type: string) => {
 export default async function AccountsPage() {
   const supabase = await createClient();
   const { data: accounts } = await supabase.from("accounts").select("*");
-  const { data: profile } = await supabase.from("profiles").select("id").eq("is_default", true).limit(1).maybeSingle();
+  const profileId = await getActiveProfileId();
 
   return (
     <div className="p-4 space-y-6 pb-20">
@@ -50,7 +51,7 @@ export default async function AccountsPage() {
         )}
       </div>
 
-      <AddAccountForm profileId={profile?.id || ""} />
+      <AddAccountForm profileId={profileId || ""} />
     </div>
   );
 }

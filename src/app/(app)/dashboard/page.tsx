@@ -1,11 +1,10 @@
 import { createClient } from "@/lib/supabase/server";
+import { getActiveProfileId } from "@/app/actions/profile";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  const { data: profileData } = await supabase.from("profiles").select("id").eq("is_default", true).limit(1).maybeSingle();
-
-  const profileId = profileData?.id;
+  const profileId = await getActiveProfileId();
 
   // Fetch accounts total balance
   const { data: accounts } = profileId 

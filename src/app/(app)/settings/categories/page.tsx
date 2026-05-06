@@ -2,14 +2,13 @@ import { createClient } from "@/lib/supabase/server";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { AddCategoryForm } from "@/components/finance/add-category-form";
+import { getActiveProfileId } from "@/app/actions/profile";
 
 export default async function CategoriesPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   const { data: categories } = await supabase.from("categories").select("*").order('type');
-  const { data: profiles } = await supabase.from("profiles").select("id").eq("is_default", true).limit(1).maybeSingle();
-
-  const activeProfileId = profiles?.id;
+  const activeProfileId = await getActiveProfileId();
 
   const incomeCategories = categories?.filter(c => c.type === "income") || [];
   const expenseCategories = categories?.filter(c => c.type === "expense") || [];
